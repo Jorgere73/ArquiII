@@ -4,56 +4,43 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <sys/wait.h>
-#include "functions.h"
 
-//HAY QUE HACER DE 0 -------------------------ESTA MAL----------------------------------------------------------
+int main(int argc, char *argv[])
+{
+    //Comprobamos que se haya pasado un parámetro
+    if(argc > 1)
+    {
+        //Puntero que apuntará a un valor '\0' si el argumento del programa es un número
+        char *fin;
+        //Convertimos argv[1] a long, en base decimal, y si todo correcto: *fin = '\0'
+        //Número de procesos hijo que vamos a tener que crear
+        long numHijos = strtol(argv[1], &fin, 10);
+        //Comprobamos que el parámetro sea un número, y sea positivo
+        if((atoi(argv[1]) > 0) && (*fin == '\0'))
+        {
+            for(int i = 0; i < numHijos; i++)
+            {
+                //Creamos el número de procesos que indica el argumento del programa
+                pid_t pid = fork();
 
-int main(int argc, char *argv[]){
-
-   
-    /*comprobacion de cuantos argumentos escribimos en la terminal*/
-    if(argc != 1){
-        /*creamos una variable int donde almacenamos el valor de hijos*/
-        int num_hijos = atoi(argv[1]);
-        /*comprobamos que el numero sea un entero y sea mayor que 0*/
-        if(atoi(argv[1]) > 0 && esnumero(argv[1]) != 1 ){
-            
-            for(int i = 0; i < num_hijos; i++){
-                /*creamos procesos*/
-                pid_t pid;
-                pid = fork(); 
-
-                /*si el proceso es un padre lo finalizamos*/
-                if(pid > 0){
-                    wait(NULL);
-                    //pause();
-                    _exit(EXIT_SUCCESS);  
+                //Comprobamos que no haya errores al crear los procesos
+                if(pid < 0)
+                {
+                    perror("Error al crear un proceso hijo");
+                    exit(-1);
                 }
-                else{
-                    /*aqui comprobamos que el proceso sea un proceso hijo*/
-                    if(pid == 0){
-                        printf("Soy hijo\n");
-                       
-                    }
-                    else{
-                        if(pid < 0){
-                           _exit(EXIT_FAILURE);   
-                        }
-                    }
+
+                //Disociamos el proceso principal de hijos
+                if(pid == 0)
+                {
+                
                 }
-            }
+                }
             
         }
-        else{
-            /*si el argumento no coincide con las comprobaciones se imprime el error*/
-            printf("Argumento no entero o menor/igual a cero\n");
-        }   
     }
-    else{
-        /*si el numero de argumentes es incorrecto imprimimos error*/
-        printf("Numero de argumentos incorrectos. Parametro que debe teclear: [Nº Hijos]\n");
+    else
+    {
+        printf("No se han introducido suficientes argumentos\n");
     }
-
-    exit(EXIT_SUCCESS);
 }
-
