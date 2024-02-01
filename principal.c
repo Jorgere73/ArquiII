@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
         //Número de procesos hijo que vamos a tener que crear
         long numHijos = strtol(argv[1], &fin, 10);
         //Comprobamos que el parámetro sea un número, y sea positivo
-        if((atoi(argv[1]) > 0) && (*fin == '\0'))
+        if(numHijos > 0 && (*fin == '\0'))
         {
             //Array que guarda los pids de los procesos hijos para envío de señales
             pid_t pidHijos[numHijos];
