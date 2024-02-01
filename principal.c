@@ -17,6 +17,8 @@ int main(int argc, char *argv[])
         //Convertimos argv[1] a long, en base decimal, y si todo correcto: *fin = '\0'
         //Número de procesos hijo que vamos a tener que crear
         long numHijos = strtol(argv[1], &fin, 10);
+        //Número de hijos creados hasta que uno falla, para saber cuántos procesos parar en caso de error
+        int numHijosCreados = 0;
         //Comprobamos que el parámetro sea un número, y sea positivo
         if(numHijos > 0 && (*fin == '\0'))
         {
@@ -32,8 +34,10 @@ int main(int argc, char *argv[])
                 if (pid < 0) 
                 {
                     perror("Error al crear un proceso hijo");
-                    //Sale con error
-                    exit(EXIT_FAILURE);
+                    //Guardamos cuántos procesos se han creado, para pararlos con kill()
+                    numHijosCreados = i;
+                    //Salimos del for()
+                    break;
                 }
 
                 // Disociamos el proceso principal de hijos
@@ -55,11 +59,13 @@ int main(int argc, char *argv[])
                 {
                     //Dentro del proceso padre, guardamos los pids de los procesos hijos
                     pidHijos[i-1] = pid;
-                    //printf("%d\n", pidHijos[i]);
+                    //Si no hay errores, numHijosCreados será igual a numHijos
+                    numHijosCreados = i;
                 }
             }
             //sleep(2);
-            for (int i = 0; i < numHijos; i++) {
+            //Recorremos el for() para parar únicamente los procesos iniciados correctamente (numHijosCreados)
+            for (int i = 0; i < numHijosCreados; i++) {
                 //Envíamos señal SIGSTOP a cada uno de los procesos hijos y comprobamos si da error
                 if(kill(pidHijos[i], SIGSTOP) == -1)
                 {
