@@ -93,10 +93,6 @@ int main(int argc, char *argv[]){
                 else{
                     perror("Argumento no es entero o menor que 0 [principal.c]");
                     exit(EXIT_FAILURE);
-                }
-                
-                
-               
+                }               
             }
-    
 }
