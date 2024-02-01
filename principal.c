@@ -3,22 +3,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
-#include <sys/wait.h>
 #include <signal.h>
 
-//HAY QUE HACER DE 0 -------------------------ESTA MAL----------------------------------------------------------
 
 int main(int argc, char *argv[]){
 
-
         /*creo un puntero para usarlo en strtol que me indicara si cuando lo hemos pasado por dicha funcion ha llegado al final (\0) o por si al contrario, apunta a un caracter*/
         char *fin = NULL;
-
-        /*se crea un string para almacenar la concatenacion de "+" en funcion del numero recibido por parametro en el terminal*/ 
-         
+        /*creo una variable int, donde almacenare la cantidad de hijos creados para gestionar los errores*/
+        int numHijosCreados = 0;
+        
         /*esta funcion me pasa el numero que paso por parametro a long int y el puntero fin apunta a la ultima direccion de memoria*/
         long int num_ter=strtol(argv[1], &fin, 10);
-        int numHijosCreados = 0;
 
         
             if (argv[1] == NULL){
@@ -28,6 +24,7 @@ int main(int argc, char *argv[]){
             else{
                 /*si el numero tecleado por pantalla es mayor que 0, es positivo y por tanto seguimos con el programa ademas hacemos la comprobacion de si contiene un caracter*/
                 if(num_ter > 0 && *fin == '\0' ){
+                    /*creamos una variable pid_t para poder gestionar los procesos hijos*/            
                     pid_t pid_Hijos[num_ter];
                     for(int i = 1; i<=num_ter;i++){
                         /*creamos los procesos*/    
@@ -44,11 +41,12 @@ int main(int argc, char *argv[]){
                         }
 
                         if(pid == 0){
-                            /*no entiendo como funciona el almacenamiento y envío*/
                             
                             //char n[10];
                             char *n = malloc((i+1)*sizeof(char));
+                            /*pasamos de int a caracter*/
                             sprintf(n, "%d", i);
+                            /*usamos execl para ejecutar el ejecutable de proceso*/
                             execl("./proceso","proceso",n, (char *)NULL); 
                         }
                         else{
