@@ -55,7 +55,6 @@ int main(int argc, char *argv[]){
                             char *n = malloc((i+1)*sizeof(char));
                             sprintf(n, "%d", i);
                             execl("./proceso","proceso",n, (char *)NULL); 
-
                         }
                         else{
                             //Dentro del proceso padre, guardamos los pids de los procesos hijos
@@ -64,6 +63,7 @@ int main(int argc, char *argv[]){
                             numHijosCreados = i;
                         }
                     }
+                        
                     //Si el número de hijos creados fue menor al pasado por parámetro, hubo un error en la creación
                     if(numHijosCreados < num_ter)
                     {
@@ -86,10 +86,8 @@ int main(int argc, char *argv[]){
                         }
                         //Salimos con señal correcta
                         exit(EXIT_SUCCESS);
-                    }
-                    
+                    }   
                 }
-                
                 else{
                     perror("Argumento no es entero o menor que 0 [principal.c]");
                     exit(EXIT_FAILURE);
