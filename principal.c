@@ -26,16 +26,11 @@ int main(int argc, char *argv[]){
                 printf("no hay argumentos [principal.c]\n");
             }
             else{
-
-
-                
-                
                 /*si el numero tecleado por pantalla es mayor que 0, es positivo y por tanto seguimos con el programa ademas hacemos la comprobacion de si contiene un caracter*/
                 if(num_ter > 0 && *fin == '\0' ){
                     pid_t pid_Hijos[num_ter];
                     for(int i = 1; i<=num_ter;i++){
-
-
+                        /*creamos los procesos*/    
                         pid_t pid;
                         pid = fork();
                         
@@ -63,6 +58,7 @@ int main(int argc, char *argv[]){
                             numHijosCreados = i;
                         }
                     }
+
                         
                     //Si el número de hijos creados fue menor al pasado por parámetro, hubo un error en la creación
                     if(numHijosCreados < num_ter)
