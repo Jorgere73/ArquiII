@@ -76,8 +76,17 @@ int main(int argc, char *argv[])
                     printf("Proceso hijo %d parado con éxito\n", pidHijos[i]);
                 }
             }
-
-            exit(EXIT_SUCCESS);
+            //Si el número de hijos creados fue menor al pasado por parámetro, hubo un error en la creación
+            if(numHijosCreados < numHijos)
+            {
+                //Salimos con señal de error
+                exit(EXIT_FAILURE);
+            }
+            else
+            {
+                //Salimos con señal correcta
+                exit(EXIT_SUCCESS);
+            }
         }
     }
     else
