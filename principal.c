@@ -8,7 +8,8 @@
 #include <time.h>
 
 #define DEFAULT_QUANTUM 1
-
+/*lo declaramos como variable global para poder usarlo en la funcion que usamos signal*/
+time_t quantum = DEFAULT_QUANTUM;
 
 void alarma(int SIGNUM);
 int main(int argc, char *argv[]){
@@ -17,7 +18,6 @@ int main(int argc, char *argv[]){
         /*creo un puntero para usarlo en strtol que me indicara si cuando lo hemos pasado por dicha funcion ha llegado al final (\0) o por si al contrario, apunta a un caracter*/
         char *fin = NULL;
         char *fin2 = NULL;
-        time_t quantum = DEFAULT_QUANTUM;
         int numHijosCreados = 0;
         /*esta funcion me pasa el numero que paso por parametro a long int y el puntero fin apunta a la ultima direccion de memoria*/
         long int num_ter=strtol(argv[1], &fin, 10);
@@ -40,12 +40,11 @@ int main(int argc, char *argv[]){
             else
             {
                 /*si el numero tecleado por pantalla es mayor que 0, es positivo y por tanto seguimos con el programa ademas hacemos la comprobacion de si contiene un caracter*/
-                if(num_ter > 0 && *fin == '\0')ç
+                if(num_ter > 0 && *fin == '\0')
                 {
                     pid_t pid_Hijos[num_ter];
                     for(int i = 1; i <= num_ter;i++)
                     {
-
                         pid_t pid;
                         pid = fork();
                         
@@ -57,7 +56,6 @@ int main(int argc, char *argv[]){
                             //Salimos del for()
                             break;
                         }
-
                         if(pid == 0)
                         {
                             /*no entiendo como funciona el almacenamiento y envío*/
@@ -75,6 +73,7 @@ int main(int argc, char *argv[]){
                         }
                     }
 
+
                     //Si el número de hijos creados fue menor al pasado por parámetro, hubo un error en la creación
                     if(numHijosCreados < num_ter)
                     {
@@ -83,7 +82,6 @@ int main(int argc, char *argv[]){
                     }
                     else
                     {
-                    
                         for (int i = 0; i < numHijosCreados; i++)
                         {
                             //Envíamos señal SIGSTOP a cada uno de los procesos hijos y comprobamos si da error
@@ -97,29 +95,32 @@ int main(int argc, char *argv[]){
                                 printf("Proceso hijo %d parado con éxito\n", pid_Hijos[i]);
                             }
                         }
+                        /*iniciamos el cronometro con alarm y con quantum indicamos cuantos segundos queremos que pasen*/
+                        alarm(quantum);
                         
                         while(1)
                         {
-                            //alarm(quantum);
-                            for(int i = 0; i < numHijosCreados; i++)
-                            {
 
+                            for(int i = 0; i < numHijosCreados; i++)
+                            {                                    
                                     if(kill(pid_Hijos[i], SIGCONT) == -1)
                                     {
                                         perror("Error al enviar la señal de continuar [principal.c]\n");
                                     }
                                     else{
-                                        //kill(pid_Hijos[i], SIGALRM);
-                                        //sleep(quantum);
+                                        /*usamos signal para que cuando recibamos una señal alarm, haga la funcion alarma donde reiniciamos el contador alarm*/
+                                        signal(SIGALRM, alarma);
+                                        /*pausamos el proceso hasta que recibams la señal ALARM*/
+                                        pause();
                                         
                                         if(kill(pid_Hijos[i], SIGSTOP) == -1)
                                         {
                                             perror("Error al enviar la señal de stop [principal.c]\n");
-                                        }
-                                    }                   
+                                        } 
+                                        
+                                    }
                             }
-                        }
-                        
+                        }       
                         //Salimos con señal correcta
                         exit(EXIT_SUCCESS);
                     }
@@ -129,13 +130,12 @@ int main(int argc, char *argv[]){
                 {
                     perror("Argumento(s) no es entero o menor que 0 [principal.c]");
                     exit(EXIT_FAILURE);
-                } 
-            } 
+                }  
+            }
 }
 
 void alarma(int Signum)
 {
-
-    printf("alarma\n");
-    alarm(Signum);
+    /*reiniciamos alarm*/
+    alarm(quantum);
 }
