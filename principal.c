@@ -30,10 +30,7 @@ int main(int argc, char *argv[]){
     long int num_ter = 0;
     char n[10];
 
-    if(argc == 1){
-        printf("No hay argumentos que procesar [-n] ó [-q]");
-        exit(EXIT_FAILURE);
-    } 
+    if(argc == 1) PERROR("No hay argumentos que procesar [-n] ó [-q]");    
     for(int i = 1; i < argc;){
         if(strcmp(argv[i], "-n") == 0)
         {
@@ -53,17 +50,10 @@ int main(int argc, char *argv[]){
         }
         else if(strcmp(argv[i], "-q") == 0)
         {
-                if(argv[i+1] == NULL) //mirar luego estructura
-                {
-                    printf("no hay argumentos [principal.c]\n");
-                    exit(EXIT_FAILURE);
-                }
-                else
-                {
+                if(argv[i+1] == NULL) PERROR("No hay argumentos que procesar en [-q]");
                     quantum = strtol(argv[i+1], &fin2, 10);
                     if(*fin2 != '\0' || quantum < 0) PERROR("Argumento(s) no es entero o menor que 0 [principal.c]\n")
                     i+=2;
-                }
         }
         else
         {
