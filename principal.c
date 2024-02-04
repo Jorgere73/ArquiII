@@ -31,7 +31,8 @@ int main(int argc, char *argv[]){
     char n[10];
 
     if(argc == 1) PRINTF("No hay argumentos que procesar [-n] ó [-q]\n");    
-    for(int i = 1; i < argc;){
+    for(int i = 1; i < argc;)
+    {
         if(strcmp(argv[i], "-n") == 0) 
         {
             if (argv[i+1] == NULL) PRINTF("no hay argumentos [principal.c]\n");
