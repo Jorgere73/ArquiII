@@ -48,7 +48,7 @@ int main(int argc, char *argv[]){
             if(*fin2 != '\0' || quantum < 0) PRINTF("Argumento(s) no es entero o menor que 0 [principal.c]\n")
             i+=2;
         }
-        else PRINTF("Modificador desconocido [-q] [-n]\n"); 
+        else PRINTF("Modificador(es) desconocido [-q] [-n]\n"); 
     }
     
     
