@@ -30,9 +30,15 @@ int main(int argc, char *argv[]){
     long int num_hijos = 0;
     char n[10];
 
+    long arg3 = 0;
+    int *tiemposEjec = (int*) malloc(sizeof(int));
+    int contadorTiempos = 0;
+
     if(argc == 1) PRINTF("No hay argumentos que procesar [-n] ó [-q]\n");    
     for(int i = 1; i < argc;)
     {
+        arg3 = strtol(argv[i], &fin, 10);
+        //printf("%d",arg3);
         if(strcmp(argv[i], "-n") == 0) 
         {
             if (argv[i+1] == NULL) PRINTF("no hay argumentos [principal.c]\n");
@@ -40,6 +46,7 @@ int main(int argc, char *argv[]){
             num_hijos=strtol(argv[i+1], &fin, 10); 
             /*si lo que tecleamos por pantalla es una letra o menor que 0, es negativo y por tanto terminamos el programa*/         
             if(num_hijos < 0 || *fin != '\0') PRINTF("Argumento(s) no es entero o menor que 0 [principal.c]\n"); 
+            tiemposEjec = (int*) realloc(tiemposEjec, sizeof(int) * num_hijos);
             i+=2;
         }
         else if(strcmp(argv[i], "-q") == 0)
@@ -48,6 +55,20 @@ int main(int argc, char *argv[]){
             quantum = strtol(argv[i+1], &fin2, 10);
             if(*fin2 != '\0' || quantum < 0) PRINTF("Argumento(s) no es entero o menor que 0 [principal.c]\n")
             i+=2;
+        }
+        else if(*fin == '\0' && arg3 > 0)
+        {
+            if(contadorTiempos > num_hijos)
+            {
+                free(tiemposEjec);
+                perror("Demasiados argumentos proporcionados para el número de hijos que hay");
+                exit(EXIT_FAILURE);
+
+            } 
+            tiemposEjec[contadorTiempos] = arg3;
+            //printf("%d\n", tiemposEjec[contadorTiempos]);
+            contadorTiempos++;
+            i++;
         }
         else PRINTF("Modificador(es) desconocido [-q] [-n]\n"); 
     }
