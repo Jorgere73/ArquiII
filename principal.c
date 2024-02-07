@@ -35,15 +35,16 @@ int main(int argc, char *argv[]){
     char n[10];
     time_t quantum = DEFAULT_QUANTUM;
     int comprueba = 0;
-    long tiempos_ejecucion = 0;
+    long tiempos_ejecucion_terminal = 0;
     int *tiemposEjec_Hijos = (int*) malloc(sizeof(int));
+    int *tiemposejec_imprimir = (int*) malloc(sizeof(int));
     int contadorTiempos = 0;
 
     /*PROCESADOR DE ARGUMENTOS*/
     if(argc == 1) PRINTF("No hay argumentos que procesar [-n] ó [-q]\n");    
     for(int i = 1; i < argc;)
     {
-        tiempos_ejecucion = strtol(argv[i], &fin, 10);
+        tiempos_ejecucion_terminal = strtol(argv[i], &fin, 10);
         if(strcmp(argv[i], "-n") == 0) 
         {
             if (argv[i+1] == NULL) PRINTF("no hay argumentos en [-n] [principal.c]\n");
@@ -62,19 +63,19 @@ int main(int argc, char *argv[]){
             if(*fin2 != '\0' || quantum < 0) PRINTF("Argumento(s) no es entero o menor que 0 [principal.c]\n");
             i+=2;
         }
-        else if(*fin == '\0' && tiempos_ejecucion > 0)
+        else if(*fin == '\0' && tiempos_ejecucion_terminal > 0)
         {
             if(contadorTiempos >= num_hijos)
             {
                 free(tiemposEjec_Hijos);
                 PRINTF("Demasiados argumentos proporcionados para el número de hijos\n");
             } 
-            tiemposEjec_Hijos[contadorTiempos] = tiempos_ejecucion;
-            printf("%d\n", tiemposEjec_Hijos[contadorTiempos]);
+            tiemposEjec_Hijos[contadorTiempos] = tiempos_ejecucion_terminal;
+            tiemposejec_imprimir[contadorTiempos] = tiempos_ejecucion_terminal;
             contadorTiempos++;
             i++;
         }
-        else if(*fin != '\0' || tiempos_ejecucion < 0){
+        else if(*fin != '\0' || tiempos_ejecucion_terminal < 0){
             PRINTF("tiempo(s) de ejecucion menor que 0 o no es(son) entero(s)\n");
         }else PRINTF("Modificador(es) desconocido [-q] [-n]\n"); 
     }   
@@ -118,30 +119,40 @@ int main(int argc, char *argv[]){
         if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
     }
 
+
     while(1)
     {
-        
         for(int i = 0; i < numHijosCreados; i++)
-        {    
-                                           
+        {                                  
             if(kill(pid_Hijos[i], SIGCONT) == -1) PERROR("Error al enviar la señal de continuar [principal.c]\n");
             q = MIN(tiemposEjec_Hijos[i], quantum);
+            if(q == 0)
+            {
+                continue;
+            }
             alarm(q);
             tiemposEjec_Hijos[i] -= q;
             /*pausamos el proceso hasta que recibamos una señal*/
             pause();
-            if(tiemposEjec_Hijos[i] == 0){
+            if(tiemposEjec_Hijos[i] == 0)
+            {
                 hijosmuertos++;
                 if(kill(pid_Hijos[i], SIGKILL) == -1) PERROR("Error al matar uno de los hijos\n");
-                if(i == numHijosCreados-1 && hijosmuertos == numHijosCreados) EXIT;
+                if(hijosmuertos == numHijosCreados) 
+                {
+                    printf("\nQuantum: %ld\n", quantum);
+                    printf("\n");
+                    printf("            Burst   Waiting Turnaround  ESTADO\n");
+                    printf("Arg Pid     Time    Time    Time\n");
+                    for(int i = 0; i < hijosmuertos; i++)
+                    {
+                    printf(" %d  %d       %d      %ld       %ld      TERMINATED\n",i , pid_Hijos[i], tiemposejec_imprimir[i], quantum, quantum);
+                    }
+                    EXIT;
+                }
             }
-            else
-            {
-                if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
-            }
+            if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
         }
-  
-
     }       
     //Salimos con señal correcta
     exit(EXIT_SUCCESS);
