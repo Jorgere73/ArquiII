@@ -10,7 +10,9 @@
 #define DEFAULT_QUANTUM 1
 #define TRACE printf("%s:%d\n",__FILE__,__LINE__)
 #define PERROR(m){perror(m); exit(EXIT_FAILURE);}
+#define EXIT {exit(EXIT_SUCCESS);}
 #define PRINTF(men){printf(men); exit(EXIT_FAILURE);}
+#define MIN(a,b) ((a < b) ? (a) : (b))
 
 void alarma(int SIGNUM);
 
@@ -27,6 +29,8 @@ int main(int argc, char *argv[]){
     char *fin = NULL;
     char *fin2 = NULL;
     int numHijosCreados = 0;
+    int q = 0;
+    int hijosmuertos = 0; 
     long int num_hijos = 0;
     char n[10];
     time_t quantum = DEFAULT_QUANTUM;
@@ -86,7 +90,11 @@ int main(int argc, char *argv[]){
         pid_t pid;
         pid = fork();
                     
-        if (pid < 0) PERROR("Error al crear un proceso hijo [principal.c]\n");
+        if (pid < 0){
+            perror("Error al crear un proceso hijo [principal.c]\n");
+            numHijosCreados = i;
+            break;
+        } 
         if(pid == 0)
         {
             sprintf(n, "%d", i);
@@ -112,15 +120,28 @@ int main(int argc, char *argv[]){
 
     while(1)
     {
+        
         for(int i = 0; i < numHijosCreados; i++)
-        {                                    
+        {    
+                                           
             if(kill(pid_Hijos[i], SIGCONT) == -1) PERROR("Error al enviar la señal de continuar [principal.c]\n");
-            alarm(tiemposEjec_Hijos[i]);
-            alarm(quantum);
+            q = MIN(tiemposEjec_Hijos[i], quantum);
+            alarm(q);
+            tiemposEjec_Hijos[i] -= q;
             /*pausamos el proceso hasta que recibamos una señal*/
-            pause();      
-            if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
+            pause();
+            if(tiemposEjec_Hijos[i] == 0){
+                hijosmuertos++;
+                if(kill(pid_Hijos[i], SIGKILL) == -1) PERROR("Error al matar uno de los hijos\n");
+                if(i == numHijosCreados-1 && hijosmuertos == numHijosCreados) EXIT;
+            }
+            else
+            {
+                if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
+            }
         }
+  
+
     }       
     //Salimos con señal correcta
     exit(EXIT_SUCCESS);
