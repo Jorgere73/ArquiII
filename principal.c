@@ -39,7 +39,9 @@ int main(int argc, char *argv[]){
     int *tiemposEjec_Hijos;
     int *burst_time;
     int *response_time;
+    int *turnaround_time;
     int *rt;
+    int tiempo = 0;
     int contadorTiempos = 0;
 
     /*PROCESADOR DE ARGUMENTOS*/
@@ -57,6 +59,7 @@ int main(int argc, char *argv[]){
             tiemposEjec_Hijos = (int*) malloc(sizeof(int)* num_hijos);
             burst_time =(int*) malloc(sizeof(int)* num_hijos);
             response_time = (int*) malloc(sizeof(int)* num_hijos);
+            turnaround_time = (int*) malloc(sizeof(int)* num_hijos);
             rt = (int*) malloc(sizeof(int)* num_hijos);
             comprueba = 1;
             i+=2;
@@ -89,6 +92,7 @@ int main(int argc, char *argv[]){
     /*AQUI FINALIZA EL PROCESADOR DE ARGUMENTOS POR TERMINAL*/
     
     /*COMIENZO DE  LA FUNCIONALIDAD DEL PROGRAMA*/
+    comprueba = 0;
     signal(SIGALRM, alarma);
     pid_t pid_Hijos[num_hijos];
     for(int i = 1; i <= num_hijos;i++)
@@ -114,7 +118,6 @@ int main(int argc, char *argv[]){
             numHijosCreados = i;
         }
     }
-
     //Si el número de hijos creados fue menor al pasado por parámetro, hubo un error en la creación
     if(numHijosCreados < num_hijos) PERROR("Error en creacion, numero de hijos menor que parametro escrito en terminal [principal.c]\n");
     for (int i = 0; i < numHijosCreados; i++)
@@ -123,28 +126,36 @@ int main(int argc, char *argv[]){
         /*kill nos sirve para enviar una señal, en esta caso con SIGSTOP paramos los procesos, pero no los matamos*/
         if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
     }
-
-
     while(1)
     {
         for(int i = 0; i < numHijosCreados; i++)
-        {                                  
+        {        
+                                      
             if(kill(pid_Hijos[i], SIGCONT) == -1) PERROR("Error al enviar la señal de continuar [principal.c]\n");
             q = MIN(tiemposEjec_Hijos[i], quantum); 
-            rt[i]=q;
+
             if(q == 0)
             {
                 continue;
             }
-            if(i != 0 && rt[i] != 0){
-                response_time[i]=response_time[i-1]+rt[i-1];
+            rt[i]=q;
+            if(comprueba != 1){
+                response_time[i] = tiempo;
+                comprueba = 1;
             }
             else 
             {
-                if(rt[i] != 0){
-                    response_time[i]=0;
-                }
                 
+                response_time[i] = tiempo;
+            }
+            if(tiemposEjec_Hijos[i] > quantum)
+            {
+                tiempo=quantum+tiempo;
+            }
+            else if(tiemposEjec_Hijos[i]!=0)
+            {
+                tiempo= tiempo +tiemposEjec_Hijos[i];
+                turnaround_time[i]=tiempo;
             }
             alarm(q);
             tiemposEjec_Hijos[i] -= q;
@@ -158,15 +169,21 @@ int main(int argc, char *argv[]){
                 {    
                     printf("\nQuantum: %ld\n", quantum);
                     printf("\n");
-                    printf("\t\tBurst   Response Turnaround  ESTADO\n");
+                    printf("            Burst   Response Turnaround  ESTADO\n");
                     printf("Arg Pid     Time    Time     Time\n");
                     for(int i = 0; i < hijosmuertos; i++)
                     {
-                        printf(" %d  %d       %d      %d       %ld      TERMINATED\n",i+1 , pid_Hijos[i], burst_time[i], response_time[i], quantum);
+                        printf(" %d  %d       %d      %d       %d      TERMINATED\n",i+1 , pid_Hijos[i], burst_time[i], response_time[i], turnaround_time[i]);
                     }
                     EXIT;
                 }
             }
+            else
+            {
+                turnaround_time[i]=tiempo + tiemposEjec_Hijos[i];
+            }
+           
+           
             if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
         }
     }       
