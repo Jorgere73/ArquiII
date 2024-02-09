@@ -31,6 +31,7 @@ int main(int argc, char *argv[]){
     int numHijosCreados = 0;
     int q = 0;
     int hijosmuertos = 0; 
+    //Valor del parámetro que representa número de hijos a crear (-n)
     long int num_hijos = 0;
     char n[10];
     time_t quantum = DEFAULT_QUANTUM;
@@ -89,6 +90,9 @@ int main(int argc, char *argv[]){
             PRINTF("tiempo(s) de ejecucion menor que 0 o no es(son) entero(s)\n");
         }else PRINTF("Modificador(es) desconocido [-q] [-n]\n"); 
     }   
+    //printf("%d %d", contadorTiempos, num_hijos);
+    //exit(EXIT_SUCCESS);
+    if(contadorTiempos < num_hijos) PRINTF("Demasiados pocos argumentos para el número de hijos proporcionado");
     /*comprobamos que se haya introducido el argumento -n*/
     if(comprueba != 1){ free(tiemposEjec_Hijos); PRINTF("Es obligatorio el argumento [-n]\n");}
     /*AQUI FINALIZA EL PROCESADOR DE ARGUMENTOS POR TERMINAL*/
