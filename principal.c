@@ -92,7 +92,6 @@ int main(int argc, char *argv[]){
     /*AQUI FINALIZA EL PROCESADOR DE ARGUMENTOS POR TERMINAL*/
     
     /*COMIENZO DE  LA FUNCIONALIDAD DEL PROGRAMA*/
-    comprueba = 0;
     signal(SIGALRM, alarma);
     pid_t pid_Hijos[num_hijos];
     for(int i = 1; i <= num_hijos;i++)
@@ -138,25 +137,24 @@ int main(int argc, char *argv[]){
             {
                 continue;
             }
-            rt[i]=q;
-            if(comprueba != 1){
-                response_time[i] = tiempo;
-                comprueba = 1;
-            }
-            else 
+            if(i != 0)
             {
-                
-                response_time[i] = tiempo;
+                response_time[i] = tiempo + response_time[i];    
+            }
+            else
+            {
+                response_time[i] = 0;
             }
             if(tiemposEjec_Hijos[i] > quantum)
             {
-                tiempo=quantum+tiempo;
+                tiempo = quantum + tiempo;
             }
-            else if(tiemposEjec_Hijos[i]!=0)
+            else if(tiemposEjec_Hijos[i] != 0)
             {
-                tiempo= tiempo +tiemposEjec_Hijos[i];
-                turnaround_time[i]=tiempo;
+                tiempo= tiempo + tiemposEjec_Hijos[i];
+                turnaround_time[i] = tiempo; 
             }
+            
             alarm(q);
             tiemposEjec_Hijos[i] -= q;
             /*pausamos el proceso hasta que recibamos una señal*/
