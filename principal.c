@@ -40,9 +40,11 @@ int main(int argc, char *argv[]){
     int *burst_time;
     int *response_time;
     int *turnaround_time;
+    char **estados;
     int tiempo = 0;
     int iteracion = 0;
     int contadorTiempos = 0;
+    
 
     /*PROCESADOR DE ARGUMENTOS*/
     if(argc == 1) PRINTF("No hay argumentos que procesar [-n] ó [-q]\n");    
@@ -60,6 +62,7 @@ int main(int argc, char *argv[]){
             burst_time =(int*) malloc(sizeof(int)* num_hijos);
             response_time = (int*) malloc(sizeof(int)* num_hijos);
             turnaround_time = (int*) malloc(sizeof(int)* num_hijos);
+            estados = (char**) malloc(sizeof(char*)* num_hijos);
             comprueba = 1;
             i+=2;
         }
@@ -106,6 +109,7 @@ int main(int argc, char *argv[]){
         if(pid == 0)
         {
             sprintf(n, "%d", i);
+            estados[i] = "READY";
             execl("./proceso","proceso",n, (char *)NULL); 
         }
         else
@@ -123,6 +127,7 @@ int main(int argc, char *argv[]){
         //Envíamos señal SIGSTOP a cada uno de los procesos hijos y comprobamos si da error
         /*kill nos sirve para enviar una señal, en esta caso con SIGSTOP paramos los procesos, pero no los matamos*/
         if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
+        estados[i] = "STOPPED";
     }
     while(1)
     {
@@ -132,8 +137,10 @@ int main(int argc, char *argv[]){
             q = MIN(tiemposEjec_Hijos[i], quantum); 
             if(q == 0)
             {
+               
                 continue;
             }
+            estados[i] = "RUNNING";
             /*calculamos response*/
             if(iteracion < numHijosCreados){
                 if(i != 0)
@@ -142,12 +149,11 @@ int main(int argc, char *argv[]){
                 }
                 else
                 {
-                    response_time[i] = 0;
+                    response_time[i] = tiempo;
                 }
                 iteracion++;
 
-            }
-            
+            }    
             /*calculamos Turnaround*/
             tiempo = q + tiempo;
             turnaround_time[i] = tiempo;  
@@ -158,6 +164,7 @@ int main(int argc, char *argv[]){
             if(tiemposEjec_Hijos[i] == 0)
             {
                 hijosmuertos++;
+                estados[i] = "TERMINATED";
                 if(kill(pid_Hijos[i], SIGKILL) == -1) PERROR("Error al matar uno de los hijos\n");
                 if(hijosmuertos == numHijosCreados) 
                 {    
@@ -167,18 +174,17 @@ int main(int argc, char *argv[]){
                     printf("Arg Pid     Time    Time     Time\n");
                     for(int i = 0; i < hijosmuertos; i++)
                     {
-                        printf(" %d  %d       %d      %d       %d      TERMINATED\n",i+1 , pid_Hijos[i], burst_time[i], response_time[i], turnaround_time[i]);
+                        printf(" %d  %d       %d      %d       %d      %s\n",i+1 , pid_Hijos[i], burst_time[i], response_time[i], turnaround_time[i], estados[i]);
                     }
                     EXIT;
                 }
             }
             else
             {
-                turnaround_time[i]=tiempo + tiemposEjec_Hijos[i];
+                if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
+                estados[i] = "STOPPED";
             }
-           
-           
-            if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
         }
     }       
+
 }
