@@ -41,6 +41,7 @@ int main(int argc, char *argv[]){
     int *response_time;
     int *turnaround_time;
     int tiempo = 0;
+    int iteracion = 0;
     int contadorTiempos = 0;
 
     /*PROCESADOR DE ARGUMENTOS*/
@@ -134,14 +135,19 @@ int main(int argc, char *argv[]){
                 continue;
             }
             /*calculamos response*/
-            if(i != 0)
-            {
-                response_time[i] = tiempo + response_time[i];    
+            if(iteracion < numHijosCreados){
+                if(i != 0)
+                {
+                    response_time[i] = tiempo + response_time[i];    
+                }
+                else
+                {
+                    response_time[i] = 0;
+                }
+                iteracion++;
+
             }
-            else
-            {
-                response_time[i] = 0;
-            }
+            
             /*calculamos Turnaround*/
             tiempo = q + tiempo;
             turnaround_time[i] = tiempo;  
