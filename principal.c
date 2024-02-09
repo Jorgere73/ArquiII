@@ -40,7 +40,6 @@ int main(int argc, char *argv[]){
     int *burst_time;
     int *response_time;
     int *turnaround_time;
-    int *rt;
     int tiempo = 0;
     int contadorTiempos = 0;
 
@@ -60,7 +59,6 @@ int main(int argc, char *argv[]){
             burst_time =(int*) malloc(sizeof(int)* num_hijos);
             response_time = (int*) malloc(sizeof(int)* num_hijos);
             turnaround_time = (int*) malloc(sizeof(int)* num_hijos);
-            rt = (int*) malloc(sizeof(int)* num_hijos);
             comprueba = 1;
             i+=2;
         }
@@ -128,15 +126,14 @@ int main(int argc, char *argv[]){
     while(1)
     {
         for(int i = 0; i < numHijosCreados; i++)
-        {        
-                                      
+        {                                    
             if(kill(pid_Hijos[i], SIGCONT) == -1) PERROR("Error al enviar la señal de continuar [principal.c]\n");
             q = MIN(tiemposEjec_Hijos[i], quantum); 
-
             if(q == 0)
             {
                 continue;
             }
+            /*calculamos response*/
             if(i != 0)
             {
                 response_time[i] = tiempo + response_time[i];    
@@ -145,16 +142,9 @@ int main(int argc, char *argv[]){
             {
                 response_time[i] = 0;
             }
-            if(tiemposEjec_Hijos[i] > quantum)
-            {
-                tiempo = quantum + tiempo;
-            }
-            else if(tiemposEjec_Hijos[i] != 0)
-            {
-                tiempo= tiempo + tiemposEjec_Hijos[i];
-                turnaround_time[i] = tiempo; 
-            }
-            
+            /*calculamos Turnaround*/
+            tiempo = q + tiempo;
+            turnaround_time[i] = tiempo;  
             alarm(q);
             tiemposEjec_Hijos[i] -= q;
             /*pausamos el proceso hasta que recibamos una señal*/
