@@ -44,6 +44,7 @@ int main(int argc, char *argv[]){
     char **estados;
     int tiempo = 0;
     int iteracion = 0;
+    //Cuenta el número de argumentos que se han proporcionado tras el -n x
     int contadorTiempos = 0;
     
 
@@ -90,8 +91,6 @@ int main(int argc, char *argv[]){
             PRINTF("tiempo(s) de ejecucion menor que 0 o no es(son) entero(s)\n");
         }else PRINTF("Modificador(es) desconocido [-q] [-n]\n"); 
     }   
-    //printf("%d %d", contadorTiempos, num_hijos);
-    //exit(EXIT_SUCCESS);
     if(contadorTiempos < num_hijos) PRINTF("Demasiados pocos argumentos para el número de hijos proporcionado");
     /*comprobamos que se haya introducido el argumento -n*/
     if(comprueba != 1){ free(tiemposEjec_Hijos); PRINTF("Es obligatorio el argumento [-n]\n");}
