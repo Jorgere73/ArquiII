@@ -6,6 +6,8 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <time.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #define DEFAULT_QUANTUM 1
 #define TRACE printf("%s:%d\n",__FILE__,__LINE__)
@@ -21,8 +23,8 @@ void alarma(int Signum)
 }
 
 
-int main(int argc, char *argv[]){
-
+int main(int argc, char *argv[])
+{
     /*creo un puntero para usarlo en strtol que me indicara si cuando lo hemos pasado por dicha funcion ha llegado al final (\0) o por si al contrario, apunta a un caracter*/
     char *fin = NULL;
     char *fin2 = NULL;
@@ -43,7 +45,8 @@ int main(int argc, char *argv[]){
     int iteracion = 0;
     int contadorTiempos = 0;
     int senial = 0;
- 
+    int fd;
+    char buf[] = "Prueba...";
     /*PROCESADOR DE ARGUMENTOS*/
     if(argc == 1) PRINTF("No hay argumentos que procesar [-n] ó [-q]\n");    
     for(int i = 1; i < argc;)
@@ -168,8 +171,12 @@ int main(int argc, char *argv[]){
                 if(kill(pid_Hijos[i], SIGKILL) == -1) PERROR("Error al matar uno de los hijos\n");
                 estados[i] = "TERMINATED";
                 senial = SIGKILL;
+               
                 if(hijosmuertos == numHijosCreados) 
                 {    
+                    fd = open("/home/student/arq22.0/MYFIFO", O_WRONLY);
+                    write(fd, buf, sizeof(buf));
+                    close(fd);
                     printf("\nQuantum: %ld\n", quantum);
                     printf("\n");
                     printf("            Burst   Response Turnaround  ESTADO\n");
