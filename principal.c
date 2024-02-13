@@ -16,22 +16,22 @@
 #define MIN(a,b) ((a < b) ? (a) : (b))
 
 void alarma(int SIGNUM);
-void finaliza(int SIGNUM);
 pid_t *pid_Hijos;
 char **estados;
-int senial = 0;
+int senial;
 int numHijosCreados = 0;
-int bucle_fin = 1;
 
 int main(int argc, char *argv[])
 {
     /*creo un puntero para usarlo en strtol que me indicara si cuando lo hemos pasado por dicha funcion ha llegado al final (\0) o por si al contrario, apunta a un caracter*/
     char *fin = NULL;
     char *fin2 = NULL;
+    int status;
     int q = 0;
     int hijosmuertos = 0; 
     long int num_hijos = 0;
     char n[10];
+    int pid;
     time_t quantum = DEFAULT_QUANTUM;
     int comprueba = 0;
     long tiempo_ejecucion_terminal = 0;
@@ -95,8 +95,6 @@ int main(int argc, char *argv[])
     
     /*COMIENZO DE  LA FUNCIONALIDAD DEL PROGRAMA*/
     signal(SIGALRM, alarma);
-    signal(SIGINT, finaliza);
-   
     for(int i = 1; i <= num_hijos;i++)
     {
         pid_t pid;
@@ -131,10 +129,10 @@ int main(int argc, char *argv[])
         if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
         estados[i] = "STOPPED";
     }
-    while(bucle_fin == 1)
+    while(1)
     {
-        for(int i = 0; i < numHijosCreados && bucle_fin == 1; i++)
-        {    
+        for(int i = 0; i < numHijosCreados; i++)
+        {      
             q = MIN(tiemposEjec_Hijos[i], quantum); 
             if(q == 0)
             {
@@ -166,10 +164,8 @@ int main(int argc, char *argv[])
             if(tiemposEjec_Hijos[i] == 0)
             {
                 hijosmuertos++;
-                if(kill(pid_Hijos[i], SIGKILL) == -1) PERROR("Error al matar uno de los hijos\n");
                 estados[i] = "TERMINATED";
-                senial = SIGKILL;
-               
+                if(kill(pid_Hijos[i], SIGINT) == -1) PERROR("Error al matar uno de los hijos\n");
                 if(hijosmuertos == numHijosCreados) 
                 {    
                     fd = open("/home/student/arq22.0/MYFIFO", O_WRONLY);
@@ -178,13 +174,15 @@ int main(int argc, char *argv[])
                     printf("\n");
                     printf("            Burst   Response Turnaround  ESTADO\n");
                     printf("Arg Pid     Time    Time     Time\n");
+
                     for(int i = 0; i < hijosmuertos; i++)
                     {
                         printf(" %d  %d       %d      %d       %d      %s\n",i+1 , pid_Hijos[i], burst_time[i], response_time[i], turnaround_time[i], estados[i]);
                     }
                     for(int i = 0; i < hijosmuertos; i++)
                     {
-                        printf("Hijo con PID %d señalizado por la señal %d\n", pid_Hijos[i], senial);
+                        pid=waitpid(0,&status, WUNTRACED);
+                        printf("Hijo con PID %d señalizado por la señal %d: %s\n", pid, status, strsignal(status));
                     }
                     write(fd, buf, sizeof(buf));
                     close(fd);
@@ -200,24 +198,3 @@ int main(int argc, char *argv[])
     }      
 }
 void alarma(int Signum){}
-void finaliza(int Signum)
-{
-    bucle_fin = 0;
-    printf("\n");
-    for(int i = 0; i < numHijosCreados; i++)
-    {
-        if(strcmp(estados[i], "TERMINATED") != 0)
-        {
-            if(kill(pid_Hijos[i], SIGKILL) == -1) PERROR("Error al enviar la señal de kill [principal.c]\n");
-            estados[i] = "TERMINATED";
-            senial = SIGINT;
-            printf("Hijo con PID %d señalizado por la señal %d: Interrupt\n", pid_Hijos[i], senial);
-        }
-        else
-        {
-            senial = SIGKILL;
-            printf("Hijo con PID %d señalizado por la señal %d\n", pid_Hijos[i], senial);
-        }
-    }
-    exit(EXIT_SUCCESS);
-}
