@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     int q = 0;
     int hijosmuertos = 0; 
     long int num_hijos = 0;
-    char n[10];
+    char n[80];
     int pid;
     time_t quantum = DEFAULT_QUANTUM;
     int comprueba = 0;
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
                 if(kill(pid_Hijos[i], SIGINT) == -1) PERROR("Error al matar uno de los hijos\n");
                 if(hijosmuertos == numHijosCreados) 
                 {    
-                    fd = open("/home/student/arq22.0/MYFIFO", O_WRONLY);
+                    fd = open("/usr/lab/alum/0505976/arq2/MYFIFO", O_WRONLY);
                     
                     printf("\nQuantum: %ld\n", quantum);
                     printf("\n");
