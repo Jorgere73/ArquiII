@@ -15,36 +15,38 @@
 #define PRINTF(men){printf(men); exit(EXIT_FAILURE);}
 #define MIN(a,b) ((a < b) ? (a) : (b))
 
+
 void alarma(int SIGNUM);
 pid_t *pid_Hijos;
 char **estados;
 int senial;
 int numHijosCreados = 0;
+/*creo un puntero para usarlo en strtol que me indicara si cuando lo hemos pasado por dicha funcion ha llegado al final (\0) o por si al contrario, apunta a un caracter*/
+char *fin = NULL;
+char *fin2 = NULL;
+int status;
+int q = 0;
+int hijosmuertos = 0; 
+long int num_hijos = 0;
+char n[80];
+int pid;
+time_t quantum = DEFAULT_QUANTUM;
+int comprueba = 0;
+long tiempo_ejecucion_terminal = 0;
+int tiempo = 0;
+int iteracion = 0;
+int contadorTiempos = 0;
+int fd;
+char buf[] = "Prueba...";
+int *tiemposEjec_Hijos;
+int *burst_time;
+int *response_time;
+int *turnaround_time;
 
-int main(int argc, char *argv[])
+
+//Función que gestiona el procesamiento de los argumentos del programa
+void procesarArgs(int argc, char *argv[])
 {
-    /*creo un puntero para usarlo en strtol que me indicara si cuando lo hemos pasado por dicha funcion ha llegado al final (\0) o por si al contrario, apunta a un caracter*/
-    char *fin = NULL;
-    char *fin2 = NULL;
-    int status;
-    int q = 0;
-    int hijosmuertos = 0; 
-    long int num_hijos = 0;
-    char n[80];
-    int pid;
-    time_t quantum = DEFAULT_QUANTUM;
-    int comprueba = 0;
-    long tiempo_ejecucion_terminal = 0;
-    int *tiemposEjec_Hijos;
-    int *burst_time;
-    int *response_time;
-    int *turnaround_time;
-    int tiempo = 0;
-    int iteracion = 0;
-    int contadorTiempos = 0;
-    int fd;
-    char buf[] = "Prueba...";
-    /*PROCESADOR DE ARGUMENTOS*/
     if(argc == 1) PRINTF("No hay argumentos que procesar [-n] ó [-q]\n");    
     for(int i = 1; i < argc;)
     {
@@ -91,6 +93,15 @@ int main(int argc, char *argv[])
     if(contadorTiempos < num_hijos) PRINTF("Faltan argumentos para el número de hijos proporcionado\n");    
     /*comprobamos que se haya introducido el argumento -n*/
     if(comprueba != 1){ free(tiemposEjec_Hijos); PRINTF("Es obligatorio el argumento [-n]\n");}
+}
+
+
+
+int main(int argc, char *argv[])
+{
+    
+    /*PROCESADOR DE ARGUMENTOS*/
+    procesarArgs(argc, argv);
     /*AQUI FINALIZA EL PROCESADOR DE ARGUMENTOS POR TERMINAL*/
     
     /*COMIENZO DE  LA FUNCIONALIDAD DEL PROGRAMA*/
