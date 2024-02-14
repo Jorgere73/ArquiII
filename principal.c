@@ -95,16 +95,8 @@ void procesarArgs(int argc, char *argv[])
     if(comprueba != 1){ free(tiemposEjec_Hijos); PRINTF("Es obligatorio el argumento [-n]\n");}
 }
 
-
-
-int main(int argc, char *argv[])
+void creacionProcesos()
 {
-    
-    /*PROCESADOR DE ARGUMENTOS*/
-    procesarArgs(argc, argv);
-    /*AQUI FINALIZA EL PROCESADOR DE ARGUMENTOS POR TERMINAL*/
-    
-    /*COMIENZO DE  LA FUNCIONALIDAD DEL PROGRAMA*/
     signal(SIGALRM, alarma);
     for(int i = 1; i <= num_hijos;i++)
     {
@@ -140,6 +132,18 @@ int main(int argc, char *argv[])
         if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
         estados[i] = "STOPPED";
     }
+}
+
+
+int main(int argc, char *argv[])
+{
+    
+    /*PROCESADOR DE ARGUMENTOS*/
+    procesarArgs(argc, argv);
+    /*AQUI FINALIZA EL PROCESADOR DE ARGUMENTOS POR TERMINAL*/
+    
+    /*COMIENZO DE  LA FUNCIONALIDAD DEL PROGRAMA*/
+    creacionProcesos();
     while(1)
     {
         for(int i = 0; i < numHijosCreados; i++)
