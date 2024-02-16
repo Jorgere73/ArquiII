@@ -137,6 +137,86 @@ void creacionProcesos()
     }
 }
 
+void procesamientoPrincipal()
+{
+    for(int i = 0; i < numHijosCreados; i++)
+    {      
+        q = MIN(tiemposEjec_Hijos[i], quantum); 
+        if(q == 0)
+        {
+            continue;
+        }
+        if(kill(pid_Hijos[i], SIGCONT) == -1) PERROR("Error al enviar la señal de continuar [principal.c]\n");
+        estados[i] = "RUNNING";
+        /*calculamos response*/
+        if(iteracion < numHijosCreados){
+            if(i != 0)
+            {
+                response_time[i] = tiempo + response_time[i];    
+            }
+            else
+            {
+                response_time[i] = tiempo;
+            }
+            iteracion++;
+        }    
+        /*calculamos Turnaround*/
+        tiempo = q + tiempo;
+        turnaround_time[i] = tiempo;  
+        alarm(q);
+        tiemposEjec_Hijos[i] -= q;
+        /*pausamos el proceso hasta que recibamos una señal*/
+        pause();
+        if(tiemposEjec_Hijos[i] == 0)
+        {
+            size_t bytesEscritos = 0;
+            hijosmuertos++;
+            estados[i] = "TERMINATED";
+            if(kill(pid_Hijos[i], SIGINT) == -1) PERROR("Error al matar uno de los hijos\n");
+            if(hijosmuertos == numHijosCreados) 
+            {    
+                fd = fopen("./MYFIFO", "w");
+                //String que contendrá el texto a escribir al pipe
+                char estadisticas[MAX_SIZE];
+                //Guarda en estadisticas la tabla inicial sin valores aún
+                sprintf(estadisticas, "Quantum: %ld\n\n            Burst   Response Turnaround  ESTADO\nArg Pid     Time    Time     Time\n", quantum);
+                for(int i = 0; i < hijosmuertos; i++)
+                {
+                    char temp[MAX_SIZE];
+                    //Escribimos en una variable temporal los valores de los parámetros para cada hijo
+                    sprintf(temp, " %d  %d       %d      %d       %d      %s\n",i+1 , pid_Hijos[i], burst_time[i], response_time[i], turnaround_time[i], estados[i]);
+                    //Concatenamos estos strings con la tabla de estadísticas inicial
+                    strcat(estadisticas, temp);
+                }
+                //Imprimimos la tabla de estadísticas completa por pantalla
+                printf("%s", estadisticas);
+                for(int i = 0; i < hijosmuertos; i++)
+                {
+                    pid = waitpid(0,&status, WUNTRACED);
+                    printf("Hijo con PID %d señalizado por la señal %d: %s\n", pid, status, strsignal(status));
+                }
+                //Escribimos el valor contenido en el buffer al pipe
+                bytesEscritos = fwrite(estadisticas, sizeof(char), MAX_SIZE, fd);
+                if(bytesEscritos == 0) PERROR("Error al escribir sobre el pipe");
+                //Cerramos el pipe
+                fclose(fd);
+                //Liberamos los mallocs
+                free(tiemposEjec_Hijos);
+                free(burst_time);
+                free(response_time);
+                free(turnaround_time);
+                free(pid_Hijos);
+                free(estados);
+                exit(EXIT_SUCCESS);
+            }
+        }
+        else
+        {
+            if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
+            estados[i] = "STOPPED";
+        }
+    }    
+}
 
 int main(int argc, char *argv[])
 {
@@ -149,86 +229,7 @@ int main(int argc, char *argv[])
     creacionProcesos();
     while(1)
     {
-        for(int i = 0; i < numHijosCreados; i++)
-        {      
-            q = MIN(tiemposEjec_Hijos[i], quantum); 
-            if(q == 0)
-            {
-                continue;
-            }
-            if(kill(pid_Hijos[i], SIGCONT) == -1) PERROR("Error al enviar la señal de continuar [principal.c]\n");
-            estados[i] = "RUNNING";
-
-            /*calculamos response*/
-            if(iteracion < numHijosCreados){
-                if(i != 0)
-                {
-                    response_time[i] = tiempo + response_time[i];    
-                }
-                else
-                {
-                    response_time[i] = tiempo;
-                }
-                iteracion++;
-            }    
-            /*calculamos Turnaround*/
-            tiempo = q + tiempo;
-            turnaround_time[i] = tiempo;  
-
-            alarm(q);
-            tiemposEjec_Hijos[i] -= q;
-            /*pausamos el proceso hasta que recibamos una señal*/
-            pause();
-            if(tiemposEjec_Hijos[i] == 0)
-            {
-                size_t bytesEscritos = 0;
-                hijosmuertos++;
-                estados[i] = "TERMINATED";
-                if(kill(pid_Hijos[i], SIGINT) == -1) PERROR("Error al matar uno de los hijos\n");
-                if(hijosmuertos == numHijosCreados) 
-                {    
-                    fd = fopen("./MYFIFO", "w");
-                    //String que contendrá el texto a escribir al pipe
-                    char estadisticas[MAX_SIZE];
-                    //Guarda en estadisticas la tabla inicial sin valores aún
-                    sprintf(estadisticas, "Quantum: %ld\n\n            Burst   Response Turnaround  ESTADO\nArg Pid     Time    Time     Time\n", quantum);
-
-                    for(int i = 0; i < hijosmuertos; i++)
-                    {
-                        char temp[MAX_SIZE];
-                        //Escribimos en una variable temporal los valores de los parámetros para cada hijo
-                        sprintf(temp, " %d  %d       %d      %d       %d      %s\n",i+1 , pid_Hijos[i], burst_time[i], response_time[i], turnaround_time[i], estados[i]);
-                        //Concatenamos estos strings con la tabla de estadísticas inicial
-                        strcat(estadisticas, temp);
-                    }
-                    //Imprimimos la tabla de estadísticas completa por pantalla
-                    printf("%s", estadisticas);
-                    for(int i = 0; i < hijosmuertos; i++)
-                    {
-                        pid = waitpid(0,&status, WUNTRACED);
-                        printf("Hijo con PID %d señalizado por la señal %d: %s\n", pid, status, strsignal(status));
-                    }
-                    //Escribimos el valor contenido en el buffer al pipe
-                    bytesEscritos = fwrite(estadisticas, sizeof(char), MAX_SIZE, fd);
-                    if(bytesEscritos == 0) PERROR("Error al escribir sobre el pipe");
-                    //Cerramos el pipe
-                    fclose(fd);
-                    //Liberamos los mallocs
-                    free(tiemposEjec_Hijos);
-                    free(burst_time);
-                    free(response_time);
-                    free(turnaround_time);
-                    free(pid_Hijos);
-                    free(estados);
-                    exit(EXIT_SUCCESS);
-                }
-            }
-            else
-            {
-                if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
-                estados[i] = "STOPPED";
-            }
-        }
-    }      
+        procesamientoPrincipal();
+    }
 }
 void alarma(int Signum){}
