@@ -14,6 +14,7 @@
 #define PERROR(m){perror(m); exit(EXIT_FAILURE);}
 #define PRINTF(men){printf(men); exit(EXIT_FAILURE);}
 #define MIN(a,b) ((a < b) ? (a) : (b))
+#define MAX_SIZE 5000
 
 
 void alarma(int SIGNUM);
@@ -36,8 +37,10 @@ long tiempo_ejecucion_terminal = 0;
 int tiempo = 0;
 int iteracion = 0;
 int contadorTiempos = 0;
-int fd;
-char buf[] = "Prueba...";
+//Descriptor del pipe al que escribiremos (MYFIFO)
+FILE *fd;
+//Buffer de datos que escribiremos sobre el pipe (MYFIFO)
+char buf[MAX_SIZE];
 int *tiemposEjec_Hijos;
 int *burst_time;
 int *response_time;
@@ -65,6 +68,12 @@ void procesarArgs(int argc, char *argv[])
             pid_Hijos = (int*) malloc(sizeof(int)* num_hijos);
             estados = (char**) malloc(sizeof(char*)* num_hijos);
             comprueba = 1;
+            free(tiemposEjec_Hijos);
+            free(burst_time);
+            free(response_time);
+            free(turnaround_time);
+            free(pid_Hijos);
+            free(estados);
             i+=2;
         }
         else if(strcmp(argv[i], "-q") == 0)
@@ -178,29 +187,45 @@ int main(int argc, char *argv[])
             pause();
             if(tiemposEjec_Hijos[i] == 0)
             {
+                size_t bytesEscritos = 0;
                 hijosmuertos++;
                 estados[i] = "TERMINATED";
                 if(kill(pid_Hijos[i], SIGINT) == -1) PERROR("Error al matar uno de los hijos\n");
                 if(hijosmuertos == numHijosCreados) 
                 {    
-                    fd = open("/usr/lab/alum/0505976/arq2/MYFIFO", O_WRONLY);
-                    
-                    printf("\nQuantum: %ld\n", quantum);
-                    printf("\n");
-                    printf("            Burst   Response Turnaround  ESTADO\n");
-                    printf("Arg Pid     Time    Time     Time\n");
+                    fd = fopen("./MYFIFO", "w");
+                    //String que contendrá el texto a escribir al pipe
+                    char estadisticas[MAX_SIZE];
+                    //Guarda en estadisticas la tabla inicial sin valores aún
+                    sprintf(estadisticas, "Quantum: %ld\n\n            Burst   Response Turnaround  ESTADO\nArg Pid     Time    Time     Time\n", quantum);
 
                     for(int i = 0; i < hijosmuertos; i++)
                     {
-                        printf(" %d  %d       %d      %d       %d      %s\n",i+1 , pid_Hijos[i], burst_time[i], response_time[i], turnaround_time[i], estados[i]);
+                        char temp[MAX_SIZE];
+                        //Escribimos en una variable temporal los valores de los parámetros para cada hijo
+                        sprintf(temp, " %d  %d       %d      %d       %d      %s\n",i+1 , pid_Hijos[i], burst_time[i], response_time[i], turnaround_time[i], estados[i]);
+                        //Concatenamos estos strings con la tabla de estadísticas inicial
+                        strcat(estadisticas, temp);
                     }
+                    //Imprimimos la tabla de estadísticas completa por pantalla
+                    printf("%s", estadisticas);
                     for(int i = 0; i < hijosmuertos; i++)
                     {
-                        pid=waitpid(0,&status, WUNTRACED);
+                        pid = waitpid(0,&status, WUNTRACED);
                         printf("Hijo con PID %d señalizado por la señal %d: %s\n", pid, status, strsignal(status));
                     }
-                    write(fd, buf, sizeof(buf));
-                    close(fd);
+                    //Escribimos el valor contenido en el buffer al pipe
+                    bytesEscritos = fwrite(estadisticas, sizeof(char), MAX_SIZE, fd);
+                    if(bytesEscritos == 0) PERROR("Error al escribir sobre el pipe");
+                    //Cerramos el pipe
+                    fclose(fd);
+                    //Liberamos los mallocs
+                    //free(tiemposEjec_Hijos);
+                    //free(burst_time);
+                    //free(response_time);
+                    //free(turnaround_time);
+                    //free(pid_Hijos);
+                    //free(estados);
                     exit(EXIT_SUCCESS);
                 }
             }
