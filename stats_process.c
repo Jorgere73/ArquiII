@@ -6,23 +6,25 @@
 #include <sys/stat.h>
 
 #define PERROR(m){perror(m); exit(EXIT_FAILURE);}
+#define MAX_SIZE 5000
 
 int main()
 {
-    int fd;
-    int num_bytes;
-    char *buf;
+    FILE *fd;
+    size_t num_bytes;
+    char buf[MAX_SIZE];
 
-    if(mkfifo("/home/student/arq22.0/MYFIFO", 0666) != 0) PERROR("Error al crear fifo\n");
-    fd = open("/home/student/arq22.0/MYFIFO", O_RDONLY);
-    if(fd == -1) PERROR("Error al abrir la tuberia\n");
+    if(mkfifo("./MYFIFO", 0666) != 0) PERROR("Error al crear fifo\n");
+    fd = fopen("./MYFIFO", "r");
+    if(fd == NULL) PERROR("Error al abrir la tuberia\n");
 
-    num_bytes = read(fd, buf, sizeof(buf));
+    printf("Aa\n");
+    num_bytes = fread(buf, sizeof(char), MAX_SIZE, fd);
     if(num_bytes == -1) PERROR("Error al leer bytes de la tuberia\n");
 
     printf("Numeros de bytes recibidos: %d\n", num_bytes);
     printf("Mensaje recibido: %s\n",buf);
-    close(fd);
-    remove("/home/student/arq22.0/MYFIFO");
+    fclose(fd);
+    remove("./MYFIFO");
     exit(EXIT_SUCCESS);
 }
