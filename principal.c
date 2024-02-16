@@ -68,12 +68,6 @@ void procesarArgs(int argc, char *argv[])
             pid_Hijos = (int*) malloc(sizeof(int)* num_hijos);
             estados = (char**) malloc(sizeof(char*)* num_hijos);
             comprueba = 1;
-            free(tiemposEjec_Hijos);
-            free(burst_time);
-            free(response_time);
-            free(turnaround_time);
-            free(pid_Hijos);
-            free(estados);
             i+=2;
         }
         else if(strcmp(argv[i], "-q") == 0)
@@ -220,12 +214,12 @@ int main(int argc, char *argv[])
                     //Cerramos el pipe
                     fclose(fd);
                     //Liberamos los mallocs
-                    //free(tiemposEjec_Hijos);
-                    //free(burst_time);
-                    //free(response_time);
-                    //free(turnaround_time);
-                    //free(pid_Hijos);
-                    //free(estados);
+                    free(tiemposEjec_Hijos);
+                    free(burst_time);
+                    free(response_time);
+                    free(turnaround_time);
+                    free(pid_Hijos);
+                    free(estados);
                     exit(EXIT_SUCCESS);
                 }
             }
