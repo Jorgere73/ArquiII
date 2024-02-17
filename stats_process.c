@@ -31,9 +31,9 @@ int main()
     if(fd == NULL) PERROR("Error al abrir la tuberia\n");
 
     num_bytes = fread(buf, sizeof(char), MAX_SIZE, fd);
-    if(num_bytes == -1) PERROR("Error al leer bytes de la tuberia\n");
+    if(num_bytes == 0) PERROR("Error al leer bytes de la tuberia\n");
 
-    printf("Numeros de bytes recibidos: %d\n", num_bytes);
+    printf("Numeros de bytes recibidos: %ld\n", num_bytes);
     printf("Mensaje recibido: %s\n",buf);
     fclose(fd);
     remove("./MYFIFO");
