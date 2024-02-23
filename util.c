@@ -150,8 +150,6 @@ void procesamientoPrincipal()
         /*calculamos Turnaround*/
         tiempo += q;
         turnaround_time[i] = tiempo; 
-        printf("\n%d\n", tiempo); 
-        sleep(2);
         alarm(q);
         tiemposEjec_Hijos[i] -= q;
         /*pausamos el proceso hasta que recibamos una señal*/
