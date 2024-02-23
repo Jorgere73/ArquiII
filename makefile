@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -std=c99
+CFLAGS = -Wall 
 
 # Source files
 SRCS = proceso.c principal.c stats_process.c
