@@ -1,12 +1,15 @@
 #include "util.h"
 
 pid_t *pid_Hijos;
+//Array que contiene los estados en los que se encuentran los hijos
 char **estados;
 int numHijosCreados = 0;
 long int num_hijos = 0;
 time_t quantum = DEFAULT_QUANTUM;
 int *tiemposEjec_Hijos;
+//Tiempo de ejecución real de los hijos
 int *burst_time;
+//Tiempo que tarda el proceso en ser procesado por la CPU
 int *response_time;
 int *turnaround_time;
 int hijosmuertos = 0; 
@@ -22,7 +25,9 @@ void procesarArgs(int argc, char *argv[])
     if(argc == 1) PRINTF("No hay argumentos que procesar [-n] ó [-q]\n");    
     for(int i = 1; i < argc;)
     {
+        //Va convirtiendo los argumentos a long 
         tiempo_ejecucion_terminal = strtol(argv[i], &fin, 10);
+        //Detecta y registra el argumento correspondiente al número de hijos
         if(strcmp(argv[i], "-n") == 0) 
         {
             if (argv[i+1] == NULL) PRINTF("no hay argumentos en [-n] [principal.c]\n");
@@ -39,13 +44,16 @@ void procesarArgs(int argc, char *argv[])
             comprueba = 1;
             i+=2;
         }
+        //Detecta y registra el argumento correspondiente al quantum
         else if(strcmp(argv[i], "-q") == 0)
         {
             if(argv[i+1] == NULL) PRINTF("No hay argumentos que procesar en [-q]\n");
             quantum = strtol(argv[i+1], &fin, 10);
             if(*fin != '\0' || quantum < 0) PRINTF("Argumento(s) no es entero o menor que 0 [principal.c]\n");
+            //Se suma dos porque el número tras el flag -q ya ha sido procesado en este ciclo
             i+=2;
         }
+        //Al haber hecho una conversión a long sin ningún -q ni -n por delante, se procesa el tiempo de ejec de cada hijo
         else if(*fin == '\0' && tiempo_ejecucion_terminal > 0)
         {
             if(contadorTiempos >= num_hijos)
@@ -53,6 +61,7 @@ void procesarArgs(int argc, char *argv[])
                 free(tiemposEjec_Hijos);
                 PRINTF("Demasiados argumentos proporcionados para el número de hijos\n");
             } 
+            //Guardamos los tiempos de ejecución pasados por parámetro en un array de tiempos
             tiemposEjec_Hijos[contadorTiempos] = tiempo_ejecucion_terminal;
             burst_time[contadorTiempos] = tiempo_ejecucion_terminal;
             contadorTiempos++;
@@ -126,7 +135,8 @@ void procesamientoPrincipal()
         if(kill(pid_Hijos[i], SIGCONT) == -1) PERROR("Error al enviar la señal de continuar [principal.c]\n");
         estados[i] = "RUNNING";
         /*calculamos response*/
-        if(iteracion < numHijosCreados){
+        if(iteracion < numHijosCreados)
+        {
             if(i != 0)
             {
                 response_time[i] += tiempo;    
@@ -138,8 +148,10 @@ void procesamientoPrincipal()
             iteracion++;
         }    
         /*calculamos Turnaround*/
-        tiempo = q + tiempo;
-        turnaround_time[i] = tiempo;  
+        tiempo += q;
+        turnaround_time[i] = tiempo; 
+        printf("\n%d\n", tiempo); 
+        sleep(2);
         alarm(q);
         tiemposEjec_Hijos[i] -= q;
         /*pausamos el proceso hasta que recibamos una señal*/
