@@ -122,7 +122,6 @@ void procesamientoPrincipal()
     int status;
     int q = 0;
     int tiempo = 0;
-    int iteracion = 0;
     //Descriptor del pipe al que escribiremos (MYFIFO)
     FILE *fd;
     for(int i = 0; i < numHijosCreados; i++)
@@ -135,20 +134,14 @@ void procesamientoPrincipal()
         if(kill(pid_Hijos[i], SIGCONT) == -1) PERROR("Error al enviar la señal de continuar [principal.c]\n");
         estados[i] = "RUNNING";
         /*calculamos response*/
-        if(iteracion < numHijosCreados)
+        if(i < numHijosCreados)
         {
-            if(i != 0)
-            {
-                response_time[i] += tiempo;    
-            }
-            else
-            {
-                response_time[i] = tiempo;
-            }
-            iteracion++;
+            response_time[i] += tiempo;    
         }    
         /*calculamos Turnaround*/
         tiempo += q;
+        sleep(2);
+        printf("\n%d\n", tiempo);
         turnaround_time[i] = tiempo; 
         alarm(q);
         tiemposEjec_Hijos[i] -= q;
@@ -160,8 +153,8 @@ void procesamientoPrincipal()
             hijosmuertos++;
             estados[i] = "TERMINATED";
             if(kill(pid_Hijos[i], SIGINT) == -1) PERROR("Error al matar uno de los hijos\n");
-            printf("%d, %d\n", hijosmuertos, numHijosCreados);
-            sleep(2);
+            printf("%d, %d\n", tiempo, q);
+            sleep(1);
             if(hijosmuertos == numHijosCreados) 
             {    
                 fd = fopen("./MYFIFO", "w");
@@ -205,7 +198,7 @@ void procesamientoPrincipal()
             estados[i] = "STOPPED";
         }
     }    
-    printf("sale\n");
+    //printf("sale\n");
 }
 
 void alarma(int Signum){}
