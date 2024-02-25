@@ -1,3 +1,5 @@
 # ArquiII
 
-· Para usar compile.sh, pasar por parámetro el nombre del programa a compilar sin la extensión y creará un binario con el mismo nombre. Ej: para compilar proceso.c -> ./compile.sh proceso
+· Hemos completado todos los pasos, por lo que se corregirá hasta el paso cinco.
+
+· Para compilar el programa, bastará con invocar al makefile usando "make". Sin embargo, una vez creados los binarios, tendremos que ejecutar make clean para borrar estos y que se recompile correctamente.
