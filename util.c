@@ -199,7 +199,6 @@ void procesamientoPrincipal()
             estados[i] = "STOPPED";
         }
     }    
-    //printf("sale\n");
 }
 
 void alarma(int Signum){}
