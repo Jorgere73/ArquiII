@@ -119,6 +119,7 @@ void creacionProcesos()
 void procesamientoPrincipal()
 {
     int pid;
+    //Devuelve el estado de los hijos tras el waitpid()
     int status;
     int q = 0;
     int tiempo = 0;
@@ -131,6 +132,7 @@ void procesamientoPrincipal()
         {
             continue;
         }
+        //Envíamos señal de continuación
         if(kill(pid_Hijos[i], SIGCONT) == -1) PERROR("Error al enviar la señal de continuar [principal.c]\n");
         estados[i] = "RUNNING";
         /*calculamos response*/
@@ -140,8 +142,6 @@ void procesamientoPrincipal()
         }    
         /*calculamos Turnaround*/
         tiempo += q;
-        sleep(2);
-        printf("\n%d\n", tiempo);
         turnaround_time[i] = tiempo; 
         alarm(q);
         tiemposEjec_Hijos[i] -= q;
@@ -153,10 +153,9 @@ void procesamientoPrincipal()
             hijosmuertos++;
             estados[i] = "TERMINATED";
             if(kill(pid_Hijos[i], SIGINT) == -1) PERROR("Error al matar uno de los hijos\n");
-            printf("%d, %d\n", tiempo, q);
-            sleep(1);
             if(hijosmuertos == numHijosCreados) 
             {    
+                //Abrimos el pipe en modo escritura
                 fd = fopen("./MYFIFO", "w");
                 //String que contendrá el texto a escribir al pipe
                 char estadisticas[MAX_SIZE];
@@ -175,10 +174,11 @@ void procesamientoPrincipal()
                 for(int i = 0; i < hijosmuertos; i++)
                 {
                     pid = waitpid(0,&status, WUNTRACED);
-                    printf("Hijo con PID %d señalizado por la señal %d: %s\n", pid, status, strsignal(status));
+                    printf("Hijo con PID %d finalizado por la señal %d: %s\n", pid, status, strsignal(status));
                 }
                 //Escribimos el valor contenido en el buffer al pipe
                 bytesEscritos = fwrite(estadisticas, sizeof(char), MAX_SIZE, fd);
+                //Gestion de errores en el pipe
                 if(bytesEscritos == 0) PERROR("Error al escribir sobre el pipe");
                 //Cerramos el pipe
                 fclose(fd);
@@ -194,6 +194,7 @@ void procesamientoPrincipal()
         }
         else
         {
+            //Paramos el proceso si su tiempo no se ha acabado
             if(kill(pid_Hijos[i], SIGSTOP) == -1) PERROR("Error al enviar la señal de stop [principal.c]\n");
             estados[i] = "STOPPED";
         }
