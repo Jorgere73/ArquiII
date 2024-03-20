@@ -1,0 +1,10 @@
+Barrera
+
+barrera = new Semaphore(0)
+
+
+acquire
+----------------
+alguien hace release
+por cada acquirese para en la barrera hasta que se haga un release(1) y la barrera pasara de 1 a 0
+Anton abre barrera.(tiene que saber que contador hay dentro)
